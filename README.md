@@ -42,7 +42,7 @@ LLVM will be installed in ```llvm-install``` dir.
 ## Building pass
     mkdir build
     cd build
-    CMAKE_PREFIX_PATH=<path to llvm install> 
+    CMAKE_PREFIX_PATH=<path to llvm install> cmake ..
 
 
 ## Using pass

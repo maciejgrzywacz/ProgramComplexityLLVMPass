@@ -2,41 +2,64 @@
 #ifndef PROGRAMCOMPLEXITY_H
 #define PROGRAMCOMPLEXITY_H
 
-#include "llvm/IR/PassManager.h"
+#include "FunctionInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
+#include <set>
 
+namespace llvm {
+class BranchProbabilityInfo;
+class LoopInfo;
 class ScalarEvolution;
+class SCEV;
+class Function;
 
 namespace json {
-  class Object;
+class Object;
 }
+} // namespace llvm
 
-class ProgramComplexity : public AnalysisInfoMixin<ProgramComplexity> {
-  friend AnalysisInfoMixin<ProgramComplexity>;
-  static AnalysisKey Key;
-
-  TargetTransformInfo::TargetCostKind TargetCostKind = TargetTransformInfo::TCK_RecipThroughput;
+class ProgramComplexity : public llvm::AnalysisInfoMixin<ProgramComplexity> {
+  friend llvm::AnalysisInfoMixin<ProgramComplexity>;
+  static llvm::AnalysisKey Key;
 
 public:
-  typedef json::Object Result;
+  typedef std::shared_ptr<ProgramInfo::Function> Result;
 
-  Result run(Module &M, ModuleAnalysisManager &AM);
+  Result run(llvm::Function &F, llvm::FunctionAnalysisManager &AM);
 
 private:
+  llvm::BranchProbabilityInfo *BPI;
+  llvm::LoopInfo *LI;
+  llvm::ScalarEvolution *SE;
 
-  json::Object handleLoop(const Loop &L, ScalarEvolution &SE, TargetTransformInfo &TTI);
-  json::Object handleBranchBB(BasicBlock &BB, TargetTransformInfo &TTI);
-  json::Object handleBB(BasicBlock &BB, TargetTransformInfo &TTI);
+  llvm::Function* F;
+  std::set<llvm::BasicBlock *> visitedBlocks;
+
+  llvm::StringRef sourceFileChecksum;
+  struct ValueDebugInfo {
+    llvm::StringRef sourceName;
+    unsigned int lineNumber;
+  };
+  std::map<llvm::Value*, ValueDebugInfo> debugValueMap;
+
+  void createDebugInfoMap();
+  void trackValue(llvm::Value* val);
+  void simplifyScev(const llvm::SCEV *s);
+  std::shared_ptr<ProgramInfo::Loop> handleLoop(const llvm::Loop &L);
+  std::shared_ptr<ProgramInfo::Block> handleBB(llvm::BasicBlock &BB);
 };
 
 /// Printer pass for the \c ProgramComplexity results.
-class ProgramComplexityPrinterPass : public PassInfoMixin<ProgramComplexityPrinterPass> {
-  raw_ostream &OS;
+class ProgramComplexityPrinterPass
+    : public llvm::PassInfoMixin<ProgramComplexityPrinterPass> {
+  llvm::raw_ostream &OS;
+  static llvm::AnalysisKey Key;
 
 public:
-  explicit ProgramComplexityPrinterPass(raw_ostream &OS) : OS(OS) {}
+  explicit ProgramComplexityPrinterPass(llvm::raw_ostream &OS) : OS(OS) {}
 
-  PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
+  llvm::PreservedAnalyses run(llvm::Function &F,
+                              llvm::FunctionAnalysisManager &AM);
 };
 
 #endif // PROGRAMCOMPLEXITY_H
