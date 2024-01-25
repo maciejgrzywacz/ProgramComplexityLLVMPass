@@ -1,4 +1,3 @@
-
 #include "ProgramComplexity.h"
 
 #include "llvm/ADT/DepthFirstIterator.h"
@@ -24,12 +23,15 @@ using namespace llvm;
 
 AnalysisKey ProgramComplexity::Key;
 
+// Pass options
 static cl::opt<bool> UseBranchProbability(
     "use-branch-probability", cl::init(false), cl::Hidden,
     cl::desc("ProgramComplexity: Use branch probability info form "
              "BranchProbabilityAnalysis, for branches probabilities."));
 
+
 void ProgramComplexity::createDebugInfoMap() {
+  // Link debug info to variables in code
   DebugInfoFinder dif;
 
   DISubprogram *sp = F->getSubprogram();
@@ -42,6 +44,7 @@ void ProgramComplexity::createDebugInfoMap() {
   for(DICompileUnit *cu : dif.compile_units()) {
     DIFile *file = dyn_cast<DIFile>(cu->getOperand(0));
     sourceFileChecksum = file->getChecksum()->Value;
+    // TODO: assign checksum to output json. Should be genrated for module instead of pef function?
   }
 
   // local variables
@@ -66,6 +69,7 @@ void ProgramComplexity::createDebugInfoMap() {
     }
   }
 
+  // TODO: Decide if we want to handle global variables and if pass should be on module.
   // For global variables we have to have access to module, which means this has to be converted into a module pass.
   /*
   for (auto Global = F->getModule() M->getModule()->global_begin();
@@ -109,6 +113,7 @@ void ProgramComplexity::trackValue(Value* inst) {
 ProgramComplexity::Result ProgramComplexity::run(Function &F,
                                                  FunctionAnalysisManager &AM) {
   this->F = &F;
+
   // Get required analysis
   BPI = &AM.getResult<BranchProbabilityAnalysis>(F);
   LI = &AM.getResult<LoopAnalysis>(F);
@@ -129,6 +134,8 @@ ProgramComplexity::Result ProgramComplexity::run(Function &F,
 
   std::shared_ptr<ProgramInfo::Function> infoFunction = std::make_shared<ProgramInfo::Function>();
   infoFunction->setName(F.getNameOrAsOperand());
+
+  // Add function arguments
   for (Argument &A : F.args()) {
     std::string typeStr;
     llvm::raw_string_ostream OS(typeStr);
@@ -137,7 +144,7 @@ ProgramComplexity::Result ProgramComplexity::run(Function &F,
     infoFunction->addArgument(A.getNameOrAsOperand(), typeStr);
   }
 
-  // Handle loops and their BBs
+  // Handle loops, nested loops and their BBs
   for (Loop *loop : LI->getTopLevelLoops()) {
     infoFunction->addChild((handleLoop(*loop)));
   }
@@ -145,18 +152,23 @@ ProgramComplexity::Result ProgramComplexity::run(Function &F,
   // Handle free BBs
   for (BasicBlock &BB : F) {
     if (visitedBlocks.count(&BB)) {
-      // LLVM_DEBUG(dbgs() << "Skipping visited bb: " << BB.getName() << "\n");
       continue;
     }
 
     std::shared_ptr<ProgramInfo::Block> b = handleBB(BB);
-    if (b) infoFunction->addChild(b);
+    if (b) {
+      infoFunction->addChild(b);
+    }
   }
 
   return infoFunction;
 }
 
 void ProgramComplexity::simplifyScev(const SCEV* scev) {
+    // Break down scev to single variables and try to deduce information about them.
+    // TODO: Decide if this is doable and finish implementation.
+    // Isn't it done automatically when buildnig scev? See pass print<scalar-evolution> implementataion
+
     std::string scevStr;
     llvm::raw_string_ostream OS(scevStr);
 
@@ -193,6 +205,7 @@ std::shared_ptr<ProgramInfo::Loop> ProgramComplexity::handleLoop(const Loop &L) 
     }
   }
 
+  // Get loop iteration count
   if (SE->hasLoopInvariantBackedgeTakenCount(&L)) {
     const SCEV *backedgeTakenCount = SE->getBackedgeTakenCount(&L);
     LLVM_DEBUG(dbgs() << "Loop iteration count: " << *backedgeTakenCount << "\n");
@@ -232,7 +245,7 @@ std::shared_ptr<ProgramInfo::Block> ProgramComplexity::handleBB(BasicBlock &BB) 
     if (CallInst *callInst = dyn_cast<CallInst>(&Inst)) {
       // Handle call instruction
 
-      // Ignore annotation intrinsics
+      // Ignore annotation intrinsics (debug, lifetime)
       if (IntrinsicInst *iInst = dyn_cast<IntrinsicInst>(callInst)){
         if (iInst->isAssumeLikeIntrinsic()) {
           continue;
@@ -284,14 +297,15 @@ std::shared_ptr<ProgramInfo::Block> ProgramComplexity::handleBB(BasicBlock &BB) 
     if (BranchInst *bi = dyn_cast<BranchInst>(blockTerminator)) {
       if (bi->isConditional()) {
         Value *op1Value = bi->getOperand(0);
+        // TODO: Decide if doable and implement.
         // trackValue(op1Value);
       }
     }
 
     if (blockTerminator->getNumSuccessors() == 1) {
+      // Single successor case. Flow is sure to go there
       std::string successorName =
           blockTerminator->getSuccessor(0)->getNameOrAsOperand();
-
       infoBlock->addSuccessor(successorName, "1");
     }
 

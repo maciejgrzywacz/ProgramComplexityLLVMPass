@@ -35,6 +35,7 @@ extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
 llvmGetPassPluginInfo() {
   return {LLVM_PLUGIN_API_VERSION, "ProgramComplexityPrinterPass", "v0.1",
           [](PassBuilder &PB) {
+            // Register this printer pass, if command line --passes option has it specified
             PB.registerPipelineParsingCallback(
                 [](StringRef Name, FunctionPassManager &FPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
@@ -44,6 +45,7 @@ llvmGetPassPluginInfo() {
                   }
                   return false;
                 });
+            // Register required ProgramComplexity analysis pass
             PB.registerAnalysisRegistrationCallback(
                 [](FunctionAnalysisManager &FAM) {
                   FAM.registerPass([&] { return ProgramComplexity(); });
