@@ -57,8 +57,8 @@ void ProgramComplexity::createDebugInfoMap() {
       if(DbgInfoIntrinsic *dii = dyn_cast<DbgInfoIntrinsic>(mavUser)) {
         Value *v = dii->getOperand(0);
         debugValueMap[v] = ValueDebugInfo{lv->getName(), lv->getLine()};
-        dbgs() << "Assigning local variable: " << v->getNameOrAsOperand() << " with code variable named: "
-               << lv->getName() << ", line: " << lv->getLine() << "\n";
+        // dbgs() << "Assigning local variable: " << v->getNameOrAsOperand() << " with code variable named: "
+        //        << lv->getName() << ", line: " << lv->getLine() << "\n";
       }
       else {
         assert(false && "User of metadata should be a debug info intrinsic instruction.");

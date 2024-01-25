@@ -38,7 +38,7 @@ llvmGetPassPluginInfo() {
             PB.registerPipelineParsingCallback(
                 [](StringRef Name, FunctionPassManager &FPM,
                    ArrayRef<PassBuilder::PipelineElement>) {
-                  if (Name == "program-complexity") {
+                  if (Name == "print-program-complexity") {
                     FPM.addPass(ProgramComplexityPrinterPass(dbgs()));
                     return true;
                   }
