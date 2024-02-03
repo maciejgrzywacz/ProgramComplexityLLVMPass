@@ -5,6 +5,7 @@
 #include "FunctionInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include <set>
+#include <vector>
 
 namespace llvm {
 class BranchProbabilityInfo;
@@ -36,15 +37,18 @@ private:
   std::set<llvm::BasicBlock *> visitedBlocks;
 
   llvm::StringRef sourceFileChecksum;
-  struct ValueDebugInfo {
-    llvm::StringRef sourceName;
-    unsigned int lineNumber;
-  };
-  std::map<llvm::Value*, ValueDebugInfo> debugValueMap;
+  // struct ValueDebugInfo {
+  //   llvm::StringRef sourceName;
+  //   unsigned int lineNumber;
+
+  // };
+  std::vector<llvm::Value*> functionArguments;
+  std::map<std::string, ProgramInfo::DebugVariableInfo> debugValueMap;
 
   void createDebugInfoMap();
   void trackValue(llvm::Value* val);
-  void simplifyScev(const llvm::SCEV *s);
+  std::vector<ProgramInfo::DebugVariableInfo> getScevDebugInfo(const llvm::SCEV *s);
+  std::vector<ProgramInfo::DebugVariableInfo> getScevDebugInfo(const llvm::SCEV *s, std::vector<ProgramInfo::DebugVariableInfo> &iterationsDebugInfo);
   std::shared_ptr<ProgramInfo::Loop> handleLoop(const llvm::Loop &L);
   std::shared_ptr<ProgramInfo::Block> handleBB(llvm::BasicBlock &BB);
 };

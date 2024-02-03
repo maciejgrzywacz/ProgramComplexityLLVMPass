@@ -40,7 +40,7 @@ void ProgramComplexity::createDebugInfoMap() {
   dif.processSubprogram(sp);
 
   // Source file checksum
-  assert(dif.compile_unit_count() == 1 && "Not only compile unit");
+  assert(dif.compile_unit_count() == 1 && "Not a single compile unit");
   for(DICompileUnit *cu : dif.compile_units()) {
     DIFile *file = dyn_cast<DIFile>(cu->getOperand(0));
     sourceFileChecksum = file->getChecksum()->Value;
@@ -58,10 +58,24 @@ void ProgramComplexity::createDebugInfoMap() {
 
     for(Value* mavUser : mav->users()) {
       if(DbgInfoIntrinsic *dii = dyn_cast<DbgInfoIntrinsic>(mavUser)) {
-        Value *v = dii->getOperand(0);
-        debugValueMap[v] = ValueDebugInfo{lv->getName(), lv->getLine()};
-        // dbgs() << "Assigning local variable: " << v->getNameOrAsOperand() << " with code variable named: "
-        //        << lv->getName() << ", line: " << lv->getLine() << "\n";
+        Value* v = dii->getOperand(0);
+
+        assert(v->getType()->isMetadataTy() && "This value should be of medatada type");
+
+        // TODO: Value name change is now done manually. Check if it can by done with API somehow.
+        //       This is because values are of "metadata" type, and their names are ex. "i32 %a", instead of "a".
+        std::string valName = v->getNameOrAsOperand();
+        size_t percent_idx = valName.find("%");
+        if (percent_idx != std::string::npos) {
+          valName = valName.substr(percent_idx + 1);
+        }
+
+        // Add value debug info to map
+        debugValueMap[valName] = ProgramInfo::DebugVariableInfo{
+          .irSymbolName = valName,
+          .codeVariableName = lv->getName().str(),
+          .line = std::to_string(lv->getLine())
+        };
       }
       else {
         assert(false && "User of metadata should be a debug info intrinsic instruction.");
@@ -110,9 +124,48 @@ void ProgramComplexity::trackValue(Value* inst) {
   // Traverse IR in reverse to track given variable dependencies
 }
 
+std::vector<ProgramInfo::DebugVariableInfo> ProgramComplexity::getScevDebugInfo(const SCEV* scev) {
+  std::vector<ProgramInfo::DebugVariableInfo> iterationsDebugInfo = {};
+  return getScevDebugInfo(scev, iterationsDebugInfo);
+}
+
+std::vector<ProgramInfo::DebugVariableInfo> ProgramComplexity::getScevDebugInfo(const SCEV* scev, std::vector<ProgramInfo::DebugVariableInfo> &iterationsDebugInfo) {
+  // Break down scev to single variables and try to deduce information about them.
+  // Returns vector of varriable debug infos for each variable used in scev.
+  // TODO: Decide if this is doable and finish implementation.
+  // Isn't it done automatically when building scev? See pass print<scalar-evolution> implementation
+  std::string scevStr;
+  llvm::raw_string_ostream OS(scevStr);
+
+  for (const SCEV* s : scev->operands()) {
+    if (s->getExpressionSize() == 1) {
+      if (const SCEVUnknown *unknownS = dyn_cast<SCEVUnknown>(s)) {
+        // This part of SCEV is a variable in IR
+        Value* val = unknownS->getValue();
+
+        if (debugValueMap.count(val->getNameOrAsOperand())) {
+          ProgramInfo::DebugVariableInfo dvi = debugValueMap[val->getNameOrAsOperand()];
+          iterationsDebugInfo.push_back(dvi);
+        }
+      }
+    }
+    else {
+      iterationsDebugInfo = getScevDebugInfo(s, iterationsDebugInfo);
+
+    }
+  }
+
+  return iterationsDebugInfo;
+}
+
+
 ProgramComplexity::Result ProgramComplexity::run(Function &F,
                                                  FunctionAnalysisManager &AM) {
   this->F = &F;
+
+  for (Value* op : F.operands()) {
+    functionArguments.push_back(op);
+  }
 
   // Get required analysis
   BPI = &AM.getResult<BranchProbabilityAnalysis>(F);
@@ -164,32 +217,6 @@ ProgramComplexity::Result ProgramComplexity::run(Function &F,
   return infoFunction;
 }
 
-void ProgramComplexity::simplifyScev(const SCEV* scev) {
-    // Break down scev to single variables and try to deduce information about them.
-    // TODO: Decide if this is doable and finish implementation.
-    // Isn't it done automatically when buildnig scev? See pass print<scalar-evolution> implementataion
-
-    std::string scevStr;
-    llvm::raw_string_ostream OS(scevStr);
-
-    for (const SCEV* s : scev->operands()) {
-      if (s->getExpressionSize() == 1) {
-        if (const SCEVUnknown *unknownS = dyn_cast<SCEVUnknown>(s)) {
-          // This part of SCEV is a variable in IR
-          Value* val = unknownS->getValue();
-
-          if (Instruction *inst = dyn_cast<Instruction>(val)) {
-            scevStr = "";
-            inst->printAsOperand(OS);
-          }
-        }
-      }
-      else {
-        simplifyScev(s);
-      }
-    }
-}
-
 std::shared_ptr<ProgramInfo::Loop> ProgramComplexity::handleLoop(const Loop &L) {
   // See example ScalarEvolution.cpp:13361
   StringRef loopName = L.getName();
@@ -214,7 +241,8 @@ std::shared_ptr<ProgramInfo::Loop> ProgramComplexity::handleLoop(const Loop &L) 
     backedgeTakenCount->print(OS);
     infoLoop->setIterationCount(scevStr);
 
-    simplifyScev(backedgeTakenCount);
+    std::vector<ProgramInfo::DebugVariableInfo> scevDbgInfo = getScevDebugInfo(backedgeTakenCount);
+    infoLoop->setIterationDebugInfo(scevDbgInfo);
   }
   else {
     LLVM_DEBUG(dbgs() << "Loop iteration count: undef\n");
@@ -257,12 +285,16 @@ std::shared_ptr<ProgramInfo::Block> ProgramComplexity::handleBB(BasicBlock &BB) 
 
       // special case for call instruction - tell which function is called
       for (unsigned int i = 0; i < callInst->getNumOperands() - 1; i++) {
+        llvm::Value * arg = callInst->getOperand(i);
+
         std::string result;
         raw_string_ostream OS(result);
-        callInst->getOperand(i)->getType()->print(OS, true);
+        arg->getType()->print(OS, true);
+
+        std::string variableName = arg->getNameOrAsOperand();
 
         f.addArgument(
-          callInst->getOperand(i)->getNameOrAsOperand(),
+          variableName,
           result);
       }
       infoBlock->addCallInstruction(f);
@@ -296,7 +328,7 @@ std::shared_ptr<ProgramInfo::Block> ProgramComplexity::handleBB(BasicBlock &BB) 
     // Track variables steering block successors
     if (BranchInst *bi = dyn_cast<BranchInst>(blockTerminator)) {
       if (bi->isConditional()) {
-        Value *op1Value = bi->getOperand(0);
+        // Value *op1Value = bi->getOperand(0);
         // TODO: Decide if doable and implement.
         // trackValue(op1Value);
       }

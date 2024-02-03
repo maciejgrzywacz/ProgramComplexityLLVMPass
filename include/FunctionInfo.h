@@ -27,10 +27,24 @@ struct DebugLocation {
     std::string column = "Undef";
 
     llvm::json::Object makeJson() const {
-        llvm::json::Object dbgLocJson;
-        dbgLocJson["line"] = line;
-        dbgLocJson["column"] = column;
-        return dbgLocJson;
+        llvm::json::Object dbgJson;
+        dbgJson["line"] = line;
+        dbgJson["column"] = column;
+        return dbgJson;
+    }
+};
+
+struct DebugVariableInfo {
+    std::string irSymbolName = "Undef";
+    std::string codeVariableName = "Undef";
+    std::string line = "Undef";
+
+    llvm::json::Object makeJson() const {
+    llvm::json::Object dbgJson;
+    dbgJson["LLVM_IR_name"] = irSymbolName;
+    dbgJson["source_code_name"] = codeVariableName;
+    dbgJson["line"] = line;
+    return dbgJson;
     }
 };
 
@@ -194,9 +208,15 @@ struct Block : ProgramPart {
 
 struct Loop : ProgramPart {
     std::string iterations;
+    std::vector<DebugVariableInfo> iterationsDebugInfo;
+
 
     void setIterationCount(std::string iterationCount) {
         iterations = iterationCount;
+    }
+
+    void setIterationDebugInfo(std::vector<DebugVariableInfo> &iterationsDebugInfo) {
+        this->iterationsDebugInfo = iterationsDebugInfo;
     }
 
     virtual void print(std::stringstream &ss, int indent_level = 0) override {
@@ -209,6 +229,12 @@ struct Loop : ProgramPart {
         loopJson["type"] = "loop";
         loopJson["name"] = name;
         loopJson["iterations"] = iterations;
+
+        llvm::json::Array iterationsDbgInfoJson;
+        for(DebugVariableInfo i : iterationsDebugInfo) {
+            iterationsDbgInfoJson.push_back(std::move(i.makeJson()));
+        }
+        loopJson["iterations_debug_info"] = std::move(iterationsDbgInfoJson);
 
         if (!children.empty()) {
             llvm::json::Array childrenJson;
