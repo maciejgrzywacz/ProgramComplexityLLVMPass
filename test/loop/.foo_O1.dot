@@ -1,0 +1,24 @@
+digraph "CFG for 'foo' function" {
+	label="CFG for 'foo' function";
+
+	Node0x55bcfeeec830 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#e5705870" fontname="Courier",label="{entry:\l|  %c = alloca i32, align 4\l  call void @llvm.lifetime.start.p0(i64 4, ptr nonnull %c)\l  store volatile i32 9, ptr %c, align 4, !tbaa !5\l  %cmp26 = icmp slt i32 %a, %limit\l  br i1 %cmp26, label %for.cond1.preheader, label %for.end7\l|{<s0>T|<s1>F}}"];
+	Node0x55bcfeeec830:s0 -> Node0x55bcfeef01c0[tooltip="entry -> for.cond1.preheader\nProbability 50.00%" ];
+	Node0x55bcfeeec830:s1 -> Node0x55bcfeef0260[tooltip="entry -> for.end7\nProbability 50.00%" ];
+	Node0x55bcfeef01c0 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#d0473d70" fontname="Courier",label="{for.cond1.preheader:\l|  %a.addr.028 = phi i32 [ %inc6, %for.inc5 ], [ %a, %entry ]\l  %b.addr.027 = phi i32 [ %b.addr.1.lcssa, %for.inc5 ], [ %b, %entry ]\l  %b.addr.123 = add nsw i32 %b.addr.027, 1\l  %cmp224 = icmp slt i32 %b.addr.123, %limit\l  br i1 %cmp224, label %for.body3, label %for.inc5\l|{<s0>T|<s1>F}}"];
+	Node0x55bcfeef01c0:s0 -> Node0x55bcfeef0990[tooltip="for.cond1.preheader -> for.body3\nProbability 50.00%" ];
+	Node0x55bcfeef01c0:s1 -> Node0x55bcfeef0420[tooltip="for.cond1.preheader -> for.inc5\nProbability 50.00%" ];
+	Node0x55bcfeef0990 [shape=record,color="#b70d28ff", style=filled, fillcolor="#b70d2870" fontname="Courier",label="{for.body3:\l|  %b.addr.125 = phi i32 [ %b.addr.1, %for.body3 ], [ %b.addr.123,\l... %for.cond1.preheader ]\l  %c.0.c.0.c.0.c.0. = load volatile i32, ptr %c, align 4, !tbaa !5\l  %add4 = add nsw i32 %c.0.c.0.c.0.c.0., 1\l  store volatile i32 %add4, ptr %c, align 4, !tbaa !5\l  %b.addr.1 = add i32 %b.addr.125, 1\l  %exitcond.not = icmp eq i32 %b.addr.1, %limit\l  br i1 %exitcond.not, label %for.inc5, label %for.body3, !llvm.loop !9\l|{<s0>T|<s1>F}}"];
+	Node0x55bcfeef0990:s0 -> Node0x55bcfeef0420[tooltip="for.body3 -> for.inc5\nProbability 3.12%" ];
+	Node0x55bcfeef0990:s1 -> Node0x55bcfeef0990[tooltip="for.body3 -> for.body3\nProbability 96.88%" ];
+	Node0x55bcfeef0420 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#d0473d70" fontname="Courier",label="{for.inc5:\l|  %b.addr.1.lcssa = phi i32 [ %b.addr.123, %for.cond1.preheader ], [ %limit,\l... %for.body3 ]\l  %inc6 = add i32 %a.addr.028, 1\l  %exitcond31.not = icmp eq i32 %inc6, %limit\l  br i1 %exitcond31.not, label %for.end7, label %for.cond1.preheader,\l... !llvm.loop !12\l|{<s0>T|<s1>F}}"];
+	Node0x55bcfeef0420:s0 -> Node0x55bcfeef0260[tooltip="for.inc5 -> for.end7\nProbability 3.12%" ];
+	Node0x55bcfeef0420:s1 -> Node0x55bcfeef01c0[tooltip="for.inc5 -> for.cond1.preheader\nProbability 96.88%" ];
+	Node0x55bcfeef0260 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#e5705870" fontname="Courier",label="{for.end7:\l|  %a.addr.0.lcssa = phi i32 [ %a, %entry ], [ %limit, %for.inc5 ]\l  %c.0.c.0.c.0.c.0.16 = load volatile i32, ptr %c, align 4, !tbaa !5\l  %cmp8 = icmp sgt i32 %c.0.c.0.c.0.c.0.16, 36\l  br i1 %cmp8, label %if.then, label %if.else\l|{<s0>T|<s1>F}}"];
+	Node0x55bcfeef0260:s0 -> Node0x55bcfeef1e60[tooltip="for.end7 -> if.then\nProbability 50.00%" ];
+	Node0x55bcfeef0260:s1 -> Node0x55bcfeef1ed0[tooltip="for.end7 -> if.else\nProbability 50.00%" ];
+	Node0x55bcfeef1e60 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#e8765c70" fontname="Courier",label="{if.then:\l|  %rem = srem i32 %a.addr.0.lcssa, 10\l  %idxprom = sext i32 %rem to i64\l  %arrayidx = getelementptr inbounds [10 x i32], ptr @global_array, i64 0, i64\l... %idxprom\l  %0 = load i32, ptr %arrayidx, align 4, !tbaa !5\l  %call = tail call i32 (ptr, ...) @printf(ptr noundef nonnull\l... dereferenceable(1) @.str, i32 noundef %0)\l  br label %if.end\l}"];
+	Node0x55bcfeef1e60 -> Node0x55bcfeef2930[tooltip="if.then -> if.end\nProbability 100.00%" ];
+	Node0x55bcfeef1ed0 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#e8765c70" fontname="Courier",label="{if.else:\l|  %rem9 = srem i32 %limit, 10\l  %idxprom10 = sext i32 %rem9 to i64\l  %arrayidx11 = getelementptr inbounds [10 x i32], ptr @global_array, i64 0,\l... i64 %idxprom10\l  %1 = load i32, ptr %arrayidx11, align 4, !tbaa !5\l  %conv = sitofp i32 %1 to double\l  %call12 = tail call double @log(double noundef %conv) #4\l  %conv13 = fptosi double %call12 to i32\l  br label %if.end\l}"];
+	Node0x55bcfeef1ed0 -> Node0x55bcfeef2930[tooltip="if.else -> if.end\nProbability 100.00%" ];
+	Node0x55bcfeef2930 [shape=record,color="#3d50c3ff", style=filled, fillcolor="#e5705870" fontname="Courier",label="{if.end:\l|  %return_value.0 = phi i32 [ %0, %if.then ], [ %conv13, %if.else ]\l  call void @llvm.lifetime.end.p0(i64 4, ptr nonnull %c)\l  ret i32 %return_value.0\l}"];
+}

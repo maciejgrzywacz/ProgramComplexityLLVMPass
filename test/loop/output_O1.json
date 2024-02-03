@@ -1,0 +1,383 @@
+{
+ "arguments": [
+  {
+   "name": "a",
+   "type": "i32"
+  },
+  {
+   "name": "b",
+   "type": "i32"
+  },
+  {
+   "name": "limit",
+   "type": "i32"
+  }
+ ],
+ "children": [
+  {
+   "children": [
+    {
+     "children": [
+      {
+       "function calls": [],
+       "instructions": [
+        {
+         "count": 2,
+         "instruction": "add"
+        },
+        {
+         "count": 1,
+         "instruction": "br"
+        },
+        {
+         "count": 1,
+         "instruction": "icmp"
+        },
+        {
+         "count": 1,
+         "instruction": "load"
+        },
+        {
+         "count": 1,
+         "instruction": "phi"
+        },
+        {
+         "count": 1,
+         "instruction": "store"
+        }
+       ],
+       "name": "for.body3",
+       "successors": [
+        {
+         "probability": "(1 - BranchProbability_for.body3_for.inc5)",
+         "successor": "for.body3"
+        },
+        {
+         "probability": "BranchProbability_for.body3_for.inc5",
+         "successor": "for.inc5"
+        }
+       ],
+       "terminator_dbg_location": {
+        "column": "9",
+        "line": "10"
+       },
+       "type": "basic block"
+      }
+     ],
+     "iterations": "(-2 + (-1 * %b.addr.027) + %limit)",
+     "iterations_debug_info": [
+      {
+       "LLVM_IR_name": "b.addr.027",
+       "line": "6",
+       "source_code_name": "b"
+      },
+      {
+       "LLVM_IR_name": "limit",
+       "line": "6",
+       "source_code_name": "limit"
+      }
+     ],
+     "name": "for.body3",
+     "type": "loop"
+    },
+    {
+     "function calls": [],
+     "instructions": [
+      {
+       "count": 1,
+       "instruction": "add"
+      },
+      {
+       "count": 1,
+       "instruction": "br"
+      },
+      {
+       "count": 1,
+       "instruction": "icmp"
+      },
+      {
+       "count": 2,
+       "instruction": "phi"
+      }
+     ],
+     "name": "for.cond1.preheader",
+     "successors": [
+      {
+       "probability": "BranchProbability_for.cond1.preheader_for.body3",
+       "successor": "for.body3"
+      },
+      {
+       "probability": "(1 - BranchProbability_for.cond1.preheader_for.body3)",
+       "successor": "for.inc5"
+      }
+     ],
+     "terminator_dbg_location": {
+      "column": "9",
+      "line": "10"
+     },
+     "type": "basic block"
+    },
+    {
+     "function calls": [],
+     "instructions": [
+      {
+       "count": 1,
+       "instruction": "add"
+      },
+      {
+       "count": 1,
+       "instruction": "br"
+      },
+      {
+       "count": 1,
+       "instruction": "icmp"
+      },
+      {
+       "count": 1,
+       "instruction": "phi"
+      }
+     ],
+     "name": "for.inc5",
+     "successors": [
+      {
+       "probability": "(1 - BranchProbability_for.inc5_for.end7)",
+       "successor": "for.cond1.preheader"
+      },
+      {
+       "probability": "BranchProbability_for.inc5_for.end7",
+       "successor": "for.end7"
+      }
+     ],
+     "terminator_dbg_location": {
+      "column": "5",
+      "line": "8"
+     },
+     "type": "basic block"
+    }
+   ],
+   "iterations": "(-1 + (-1 * %a) + %limit)",
+   "iterations_debug_info": [
+    {
+     "LLVM_IR_name": "a",
+     "line": "6",
+     "source_code_name": "a"
+    },
+    {
+     "LLVM_IR_name": "limit",
+     "line": "6",
+     "source_code_name": "limit"
+    }
+   ],
+   "name": "for.cond1.preheader",
+   "type": "loop"
+  },
+  {
+   "function calls": [],
+   "instructions": [
+    {
+     "count": 1,
+     "instruction": "alloca"
+    },
+    {
+     "count": 1,
+     "instruction": "br"
+    },
+    {
+     "count": 1,
+     "instruction": "icmp"
+    },
+    {
+     "count": 1,
+     "instruction": "store"
+    }
+   ],
+   "name": "entry",
+   "successors": [
+    {
+     "probability": "BranchProbability_entry_for.cond1.preheader",
+     "successor": "for.cond1.preheader"
+    },
+    {
+     "probability": "(1 - BranchProbability_entry_for.cond1.preheader)",
+     "successor": "for.end7"
+    }
+   ],
+   "terminator_dbg_location": {
+    "column": "5",
+    "line": "8"
+   },
+   "type": "basic block"
+  },
+  {
+   "function calls": [],
+   "instructions": [
+    {
+     "count": 1,
+     "instruction": "br"
+    },
+    {
+     "count": 1,
+     "instruction": "icmp"
+    },
+    {
+     "count": 1,
+     "instruction": "load"
+    },
+    {
+     "count": 1,
+     "instruction": "phi"
+    }
+   ],
+   "name": "for.end7",
+   "successors": [
+    {
+     "probability": "(1 - BranchProbability_for.end7_if.then)",
+     "successor": "if.else"
+    },
+    {
+     "probability": "BranchProbability_for.end7_if.then",
+     "successor": "if.then"
+    }
+   ],
+   "terminator_dbg_location": {
+    "column": "9",
+    "line": "16"
+   },
+   "type": "basic block"
+  },
+  {
+   "function calls": [
+    {
+     "function": {
+      "arguments": [
+       {
+        "name": ".str",
+        "type": "ptr"
+       },
+       {
+        "name": "%0",
+        "type": "i32"
+       }
+      ],
+      "name": "printf",
+      "type": "function"
+     }
+    }
+   ],
+   "instructions": [
+    {
+     "count": 1,
+     "instruction": "br"
+    },
+    {
+     "count": 1,
+     "instruction": "getelementptr"
+    },
+    {
+     "count": 1,
+     "instruction": "load"
+    },
+    {
+     "count": 1,
+     "instruction": "sext"
+    },
+    {
+     "count": 1,
+     "instruction": "srem"
+    }
+   ],
+   "name": "if.then",
+   "successors": [
+    {
+     "probability": "BranchProbability_if.then_if.end",
+     "successor": "if.end"
+    }
+   ],
+   "terminator_dbg_location": {
+    "column": "5",
+    "line": "19"
+   },
+   "type": "basic block"
+  },
+  {
+   "function calls": [
+    {
+     "function": {
+      "arguments": [
+       {
+        "name": "conv",
+        "type": "double"
+       }
+      ],
+      "name": "log",
+      "type": "function"
+     }
+    }
+   ],
+   "instructions": [
+    {
+     "count": 1,
+     "instruction": "br"
+    },
+    {
+     "count": 1,
+     "instruction": "fptosi"
+    },
+    {
+     "count": 1,
+     "instruction": "getelementptr"
+    },
+    {
+     "count": 1,
+     "instruction": "load"
+    },
+    {
+     "count": 1,
+     "instruction": "sext"
+    },
+    {
+     "count": 1,
+     "instruction": "sitofp"
+    },
+    {
+     "count": 1,
+     "instruction": "srem"
+    }
+   ],
+   "name": "if.else",
+   "successors": [
+    {
+     "probability": "BranchProbability_if.else_if.end",
+     "successor": "if.end"
+    }
+   ],
+   "terminator_dbg_location": {
+    "column": "Undef",
+    "line": "Undef"
+   },
+   "type": "basic block"
+  },
+  {
+   "function calls": [],
+   "instructions": [
+    {
+     "count": 1,
+     "instruction": "phi"
+    },
+    {
+     "count": 1,
+     "instruction": "ret"
+    }
+   ],
+   "name": "if.end",
+   "successors": [],
+   "terminator_dbg_location": {
+    "column": "5",
+    "line": "25"
+   },
+   "type": "basic block"
+  }
+ ],
+ "name": "foo",
+ "type": "function"
+}

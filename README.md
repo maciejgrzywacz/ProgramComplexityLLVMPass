@@ -62,3 +62,10 @@ To enable printing of debug information from pass, run opt tool with -debug opti
 ## Pass output structure
 
 TBD
+
+## Tests
+
+Currently in folder test/loop, there is one example "index_is_input.c". It was compiled with optimization flag O1. In folder there are:
+- compiled LLVM IR, in regular and debug mode.
+- output json file, containing output from pass.
+- dot graph to see visual representation of LLVM IR code.
